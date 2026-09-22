@@ -38,8 +38,7 @@ namespace CurrencyExchangeAPI
                     options.ColorBehavior = LoggerColorBehavior.Enabled;
                 });
             }
-            else
-            {
+            else {
                 string textFilePath = builder.Configuration["Logging:FileDestination"]!.ToString();
 
                 if (!Path.IsPathRooted(textFilePath))
@@ -51,7 +50,12 @@ namespace CurrencyExchangeAPI
             }
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+
+            string xmlFileName = Assembly.GetExecutingAssembly().GetName().Name + ".xml";
+            string pathToGeneratedXml = Path.Combine(AppContext.BaseDirectory, xmlFileName);
+            builder.Services.AddSwaggerGen(
+                options => options.IncludeXmlComments(pathToGeneratedXml)
+            );
 
             var app = builder.Build();
 

@@ -2,7 +2,7 @@
 using CurrencyExchangeAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using System.Diagnostics;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 
 namespace CurrencyExchangeAPI.Controllers
@@ -33,6 +33,11 @@ namespace CurrencyExchangeAPI.Controllers
             cacheKeyForRates = conf["CacheKeys:ExchangeRates"];
         }
 
+        /// <summary>
+        /// Gets all currencies from database (all that were ever successfully queried)
+        /// </summary>
+        /// <response code="204">Currency database is empty</response>
+        [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(List<Currency>))]
         [HttpGet]
         [Route("list")]
         public async Task<IActionResult> GetCurrenciesList()
@@ -49,6 +54,14 @@ namespace CurrencyExchangeAPI.Controllers
             return new JsonResult(allInDb);
         }
 
+        /// <summary>
+        /// Gets exchange rates for a specified currency against all the other ones in database
+        /// </summary>
+        /// <param name="code">Currency code to get rates for</param>
+        /// <response code="404">No currency with specified code was found in database</response>
+        /// <response code="400">Requested currency is the only database entry, nothing to get exchange rates against</response>
+        [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(IEnumerable<Exchange>))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, Type = typeof(string))]
         [HttpGet]
         [Route("rates")]
         [UppercaseCodeFilter]
@@ -99,6 +112,14 @@ namespace CurrencyExchangeAPI.Controllers
             return new JsonResult(fromExtApiWithoutSelf.ToList());
         }
 
+        /// <summary>
+        /// Saves a new currency with its most recent rates into database
+        /// </summary>
+        /// <param name="code">Currency code to save</param>
+        /// <response code="405">Specified currency is already present in database</response>
+        /// <response code="404">Nonexistent currency code requested</response>
+        /// <response code="204">Successful save</response>
+        [SwaggerResponse(StatusCodes.Status405MethodNotAllowed, Type = typeof(string))]
         [HttpPost]
         [Route("add")]
         [UppercaseCodeFilter]
