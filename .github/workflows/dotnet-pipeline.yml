@@ -31,22 +31,28 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: publish
+          name: release
           path: |
-            **/.publish
+            **/net8.0
 
   test:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v8
-      with:
-        name: publish
+      - name: Checkout code
+        uses: actions/checkout@v7
 
-    - name: Run tests
-      run: dotnet test --no-restore --verbosity normal
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Run tests
+        run: dotnet test --no-restore --verbosity normal
 
   slack_notify:
     needs: [build, test]

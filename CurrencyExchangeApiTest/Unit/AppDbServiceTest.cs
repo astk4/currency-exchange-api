@@ -1,12 +1,12 @@
 ﻿using CurrencyExchangeAPI.Infrastructure;
 using CurrencyExchangeAPI.Models;
 using Dapper;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Npgsql;
 using System.Data;
 using static Dapper.SqlMapper;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CurrencyExchangeApiTest.Unit
 {
@@ -23,15 +23,17 @@ namespace CurrencyExchangeApiTest.Unit
 
         private readonly ApplicationDbServicePostgres dbService;
         private readonly IDbConnection dbConnection;
+        private readonly Mock<ILogger<ApplicationDbServicePostgres>> mockLogger = new Mock<ILogger<ApplicationDbServicePostgres>>();
 
         public AppDbServiceTest()
         {
             string testConnStr = File.ReadAllText(connectionStringPath);
 
-            var mock = new Mock<IConfiguration>();
-            mock.Setup(a => a["Data:Postgres:Main"]).Returns(testConnStr);
+            var mockOptions = new Mock<IOptions<HostingSettings>>();
+            mockOptions.Setup(o => o.Value)
+                       .Returns(new HostingSettings() { ConnectionString = testConnStr });
 
-            dbService = new ApplicationDbServicePostgres(mock.Object);
+            dbService = new ApplicationDbServicePostgres(mockOptions.Object, mockLogger.Object);
 
             dbConnection = new NpgsqlConnection(testConnStr);
             dbConnection.Open();

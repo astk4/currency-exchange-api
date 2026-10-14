@@ -6,15 +6,15 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Npgsql;
 using System.Data;
-using Xunit.Sdk;
 using static Dapper.SqlMapper;
 
 namespace CurrencyExchangeApiTest.Integration
 {
-    public class RefreshBackgroundServiceTest : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+    public sealed class RefreshBackgroundServiceTest : IClassFixture<WebApplicationFactory<Program>>, IDisposable
     {
         private const string connectionStringPath = "test-db-connection-string.txt",
                              cleanDoubleQuery = "DELETE FROM currencies; DELETE FROM exchanges;";
@@ -22,6 +22,7 @@ namespace CurrencyExchangeApiTest.Integration
         private readonly WebApplicationFactory<Program> factory;
 
         private readonly Mock<IConfiguration> mockConfig = new Mock<IConfiguration>();
+        private readonly Mock<ILogger<RatesRefreshService>> mockLogger = new Mock<ILogger<RatesRefreshService>>();
         private readonly IDbConnection dbConnection;
 
         public RefreshBackgroundServiceTest(WebApplicationFactory<Program> factory)
@@ -32,7 +33,7 @@ namespace CurrencyExchangeApiTest.Integration
             {
                 builder.ConfigureAppConfiguration((context, configBuilder) =>
                 {
-                    Dictionary<string, string> inMemory = new Dictionary<string, string>
+                    Dictionary<string, string?> inMemory = new Dictionary<string, string?>
                     {
                         ["Data:Postgres:Main"] = testConnStr
                     };
@@ -64,7 +65,7 @@ namespace CurrencyExchangeApiTest.Integration
             IServiceScopeFactory scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>();   
             IMemoryCache cache = factory.Services.GetRequiredService<IMemoryCache>();
 
-            RatesRefreshService refreshService = new RatesRefreshService(mockConfig.Object, scopeFactory, cache);
+            RatesRefreshService refreshService = new RatesRefreshService(mockConfig.Object, scopeFactory, cache, mockLogger.Object);
 
             CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
             CancellationToken token = cancelTokenSource.Token;
@@ -98,7 +99,7 @@ namespace CurrencyExchangeApiTest.Integration
             IServiceScopeFactory scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>();
             IMemoryCache cache = factory.Services.GetRequiredService<IMemoryCache>();
 
-            RatesRefreshService refreshService = new RatesRefreshService(mockConfig.Object, scopeFactory, cache);
+            RatesRefreshService refreshService = new RatesRefreshService(mockConfig.Object, scopeFactory, cache, mockLogger.Object);
 
             CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
             CancellationToken token = cancelTokenSource.Token;

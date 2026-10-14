@@ -2,11 +2,6 @@
 using CurrencyExchangeAPI.Infrastructure;
 using CurrencyExchangeAPI.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CurrencyExchangeApiTest.Integration
 {
@@ -45,7 +40,7 @@ namespace CurrencyExchangeApiTest.Integration
 
             Assert.Null(foundCurrency);
             Assert.NotNull(exc);
-            Assert.IsType(typeof(KeyNotFoundException), exc);
+            Assert.IsType<KeyNotFoundException>(exc);
             Assert.Equal("Currency code ABC is unknown!", exc.Message);
         }
     }
