@@ -1,5 +1,6 @@
 using CurrencyExchangeAPI.Infrastructure;
 using CurrencyExchangeAPI.Infrastructure.Logging;
+using CurrencyExchangeAPI.Infrastructure.Persistence;
 using CurrencyExchangeAPI.Models;
 using Microsoft.Extensions.Logging.Console;
 using System.Reflection;
@@ -23,6 +24,7 @@ namespace CurrencyExchangeAPI
             builder.Services.AddHostedService<RatesRefreshService>();
 
             builder.Services.AddScoped<IDbService, ApplicationDbServicePostgres>();
+            builder.Services.AddScoped<ISchemaMigrations, SchemaMigrationsPostgres>();
             builder.Services.AddMemoryCache();
 
             bool isInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
@@ -70,6 +72,13 @@ namespace CurrencyExchangeAPI
             app.MapControllers();
 
             app.Logger.LogInformation("Application has started\nIf Docker detected: {IsDocker}", isInContainer);
+
+            using (IServiceScope scope = app.Services.CreateScope())
+            {
+                ISchemaMigrations migrations = scope.ServiceProvider.GetRequiredService<ISchemaMigrations>();
+                migrations.CreateDatabase();
+                migrations.CreateTables("create_tables.sql");
+            }
 
             app.Run();
 
