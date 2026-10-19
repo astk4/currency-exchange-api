@@ -39,6 +39,21 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.PG_DB_PASSWORD }}
+          POSTGRES_DB: CurrencyExchangePracticeTEST
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -50,6 +65,32 @@ jobs:
 
       - name: Install dependencies
         run: dotnet restore
+
+      - name: Fill configuration files
+        run: |
+          cd CurrencyExchangeApiTest/
+
+          echo "writing db connection string..."
+          echo -n "User ID=postgres;Password=" >> test-db-connection-string.txt
+          echo -n ${{ secrets.PG_DB_PASSWORD }}  >> test-db-connection-string.txt
+          echo -n ";Host=localhost;Port=5432;Database=CurrencyExchangePracticeTEST;" >> test-db-connection-string.txt
+
+          echo "writing api 1 config (open exchange rates)"
+          echo -n "API_KEY=" >> test-config-oxr.txt
+          echo ${{ secrets.CURRENCY_DATA_API_KEY }} >> test-config-oxr.txt
+          echo "BASE_URL=https://openexchangerates.org/api/" >> test-config-oxr.txt
+
+          echo "writing api 2 config (exchange rates v6)"
+          echo -n "API_KEY=" >> test-config-rates.txt
+          echo ${{ secrets.EXCHANGE_RATE_API_KEY }} >> test-config-rates.txt
+          echo "BASE_URL=https://v6.exchangerate-api.com/v6/" >> test-config-rates.txt
+
+          cd ../
+
+      - name: Add tables into test database
+        run: psql -h localhost -p 5432 -U postgres -d CurrencyExchangePracticeTEST -f CurrencyExchangeAPI/create_tables.sql
+        env:
+          PGPASSWORD: ${{ secrets.PG_DB_PASSWORD }}
 
       - name: Run tests
         run: dotnet test --no-restore --verbosity normal
