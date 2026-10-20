@@ -12,9 +12,12 @@ namespace CurrencyExchangeAPI.Infrastructure.Persistence
         public void CreateDatabase()
         {
             string[] connectionParts = options.Value.ConnectionString.Split(';');
+            Console.WriteLine($"conn str length {options.Value.ConnectionString.Length} characters, array length {connectionParts.Length}");
+
             string noDbConnStr = string.Join(';', connectionParts.Take(4)) + ";";
 
-            string onlyDbName = connectionParts[4].Split('=')[1];
+            string databaseNameIs = connectionParts[4];
+            string onlyDbName = databaseNameIs.Split('=')[1];
 
             using (NpgsqlConnection conn = new NpgsqlConnection(noDbConnStr))
             {

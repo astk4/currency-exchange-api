@@ -27,6 +27,8 @@ namespace CurrencyExchangeAPI
             builder.Services.AddScoped<ISchemaMigrations, SchemaMigrationsPostgres>();
             builder.Services.AddMemoryCache();
 
+            builder.Configuration.AddJsonFile("secrets.json", true);
+
             bool isInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
             string lastSectionName = isInContainer ? "Docker" : "Main";
             builder.Services.Configure<HostingSettings>(

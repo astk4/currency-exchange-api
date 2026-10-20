@@ -486,6 +486,6 @@ $RECYCLE.BIN/
 #text
 *.txt
 
-appsettings.json
+secrets.json
 
 *.http
