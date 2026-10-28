@@ -1,12 +1,6 @@
-﻿using System;
-using System.Net;
-using System.Collections.Generic;
+﻿using System.Net;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
 namespace CurrencyExchangeApiTest.Integration
 {
@@ -15,11 +9,10 @@ namespace CurrencyExchangeApiTest.Integration
         private const string errorResultStr = "error",
                              errorMessage = "unsupported-code",
                              successMessage = "success";
-    
+
         public EXRAPI_ClientTest()
         {
-            ReadConfigLines("test-config-rates.txt");
-            httpClient.BaseAddress = new Uri($"{basicUrl}{apiKey}/");
+            httpClient.BaseAddress = new Uri($"{TestCredentialsUtils.EXRAPI.baseUrl}{TestCredentialsUtils.EXRAPI.key}/");
         }
 
         [Theory]

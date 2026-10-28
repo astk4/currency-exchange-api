@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace CurrencyExchangeApiTest.Integration
 {
-    public class RatesInfoServiceTest : IClassFixture<WebApplicationFactory<Program>>
+    public class RatesInfoServiceTest : IClassFixture<TestWebAppFactory>
     {
         private readonly RatesServiceEXRAPI _service;
 
-        public RatesInfoServiceTest(WebApplicationFactory<Program> factory)
+        public RatesInfoServiceTest(TestWebAppFactory factory)
         {
             _service = (RatesServiceEXRAPI)factory.Services.GetService(typeof(RatesServiceEXRAPI));
         }

@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace CurrencyExchangeApiTest.Integration
 {
-    public class CurrencyInfoServiceTest : IClassFixture<WebApplicationFactory<Program>>
+    public class CurrencyInfoServiceTest : IClassFixture<TestWebAppFactory>
     {
         private readonly CurrencyInfoServiceOXR _service;
 
-        public CurrencyInfoServiceTest(WebApplicationFactory<Program> factory)
+        public CurrencyInfoServiceTest(TestWebAppFactory factory)
         {
             _service = (CurrencyInfoServiceOXR)factory.Services.GetService(typeof(CurrencyInfoServiceOXR));
         }

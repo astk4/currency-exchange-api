@@ -14,10 +14,9 @@ using static Dapper.SqlMapper;
 
 namespace CurrencyExchangeApiTest.Integration
 {
-    public sealed class RefreshBackgroundServiceTest : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+    public sealed class RefreshBackgroundServiceTest : IClassFixture<TestWebAppFactory>, IDisposable
     {
-        private const string connectionStringPath = "test-db-connection-string.txt",
-                             cleanDoubleQuery = "DELETE FROM currencies; DELETE FROM exchanges;";
+        private const string cleanDoubleQuery = "DELETE FROM currencies; DELETE FROM exchanges;";
 
         private readonly WebApplicationFactory<Program> factory;
 
@@ -25,34 +24,11 @@ namespace CurrencyExchangeApiTest.Integration
         private readonly Mock<ILogger<RatesRefreshService>> mockLogger = new Mock<ILogger<RatesRefreshService>>();
         private readonly IDbConnection dbConnection;
 
-        public RefreshBackgroundServiceTest(WebApplicationFactory<Program> factory)
+        public RefreshBackgroundServiceTest(TestWebAppFactory factory)
         {
-            string testConnStr = File.ReadAllText(connectionStringPath);
+            this.factory = factory;
 
-            var customFactory = factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureAppConfiguration((context, configBuilder) =>
-                {
-                    Dictionary<string, string?> inMemory = new Dictionary<string, string?>
-                    {
-                        ["Data:Postgres:Main"] = testConnStr
-                    };
-                    configBuilder.AddInMemoryCollection(inMemory);
-                });
-
-                builder.ConfigureServices(services =>
-                {
-                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDbService));
-                    if (descriptor != null)
-                        services.Remove(descriptor);
-
-                    services.AddScoped<IDbService, ApplicationDbServicePostgres>();
-                });
-            });
-
-            this.factory = customFactory;
-
-            dbConnection = new NpgsqlConnection(testConnStr);
+            dbConnection = new NpgsqlConnection(TestCredentialsUtils.DbConnectionString);
             dbConnection.Open();
         }
 

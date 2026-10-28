@@ -1,4 +1,3 @@
-using System.Net.Http;
 using System.Text.Json;
 
 namespace CurrencyExchangeApiTest.Integration
@@ -7,14 +6,13 @@ namespace CurrencyExchangeApiTest.Integration
     {
         public OXRClientTest()
         {
-            ReadConfigLines("test-config-oxr.txt");
-            httpClient.BaseAddress = new Uri(basicUrl);
+            httpClient.BaseAddress = new Uri(TestCredentialsUtils.OXR.baseUrl);
         }
 
         [Fact]
         public async Task GetAllCurrenciesListTest()
         {
-            string url = $"currencies.json?app_id={apiKey}";
+            string url = $"currencies.json?app_id={TestCredentialsUtils.OXR.key}";
 
             HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
 
@@ -31,7 +29,7 @@ namespace CurrencyExchangeApiTest.Integration
         [InlineData("INR", "Indian Rupee")]
         public async Task ExistingCurrenciesInListTest(string currencyCode, string currencyName)
         {
-            string url = $"currencies.json?app_id={apiKey}";
+            string url = $"currencies.json?app_id={TestCredentialsUtils.OXR.key}";
 
             HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
 
@@ -58,7 +56,7 @@ namespace CurrencyExchangeApiTest.Integration
         [InlineData("1234")]
         public async Task NotExistingCurrenciesNotFoundTest(string code)
         {
-            string url = $"currencies.json?app_id={apiKey}";
+            string url = $"currencies.json?app_id={TestCredentialsUtils.OXR.key}";
 
             HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
             Dictionary<string, string> currencies;

@@ -12,9 +12,7 @@ namespace CurrencyExchangeApiTest.Unit
 {
     public sealed class AppDbServiceTest : IDisposable
     {
-        private const string connectionStringPath = "test-db-connection-string.txt",
-
-                             insertCurrencyQuery = "INSERT INTO currencies (code, name) VALUES(@Code, @Name)",
+        private const string insertCurrencyQuery = "INSERT INTO currencies (code, name) VALUES(@Code, @Name)",
                              selectCurrenciesQuery = "SELECT * FROM currencies",
 
                              insertExchangeQuery = "INSERT INTO exchanges (base_code, price_code, rate, measured_at) VALUES (@BaseCode, @PriceCode, @Rate, @MeasuredAt)",
@@ -27,15 +25,13 @@ namespace CurrencyExchangeApiTest.Unit
 
         public AppDbServiceTest()
         {
-            string testConnStr = File.ReadAllText(connectionStringPath);
-
             var mockOptions = new Mock<IOptions<HostingSettings>>();
             mockOptions.Setup(o => o.Value)
-                       .Returns(new HostingSettings() { ConnectionString = testConnStr });
+                       .Returns(new HostingSettings() { ConnectionString = TestCredentialsUtils.DbConnectionString });
 
             dbService = new ApplicationDbServicePostgres(mockOptions.Object, mockLogger.Object);
 
-            dbConnection = new NpgsqlConnection(testConnStr);
+            dbConnection = new NpgsqlConnection(TestCredentialsUtils.DbConnectionString);
             dbConnection.Open();
         }
 
