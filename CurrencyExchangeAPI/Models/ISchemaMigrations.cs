@@ -2,7 +2,7 @@
 {
     public interface ISchemaMigrations
     {
-        public void CreateDatabase();
+        public void CreateDatabaseIfNotExists();
 
         public void CreateTables(string sqlFileName);
     }

@@ -111,6 +111,7 @@ jobs:
       - name: Set secrets into Fly.io app
         run: |
           flyctl secrets set Data__Postgres__Docker__ConnectionString="${{ secrets.REMOTE_DB_CONN_STRING }}" --stage
+          flyctl secrets set DEFAULT_DB_NAME="${{ secrets.REMOTE_DB_DEFAULT_NAME }}" --stage
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 

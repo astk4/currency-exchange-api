@@ -78,7 +78,7 @@ namespace CurrencyExchangeAPI
             using (IServiceScope scope = app.Services.CreateScope())
             {
                 ISchemaMigrations migrations = scope.ServiceProvider.GetRequiredService<ISchemaMigrations>();
-                migrations.CreateDatabase();
+                migrations.CreateDatabaseIfNotExists();
                 migrations.CreateTables("create_tables.sql");
             }
 

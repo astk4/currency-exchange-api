@@ -9,26 +9,28 @@ namespace CurrencyExchangeAPI.Infrastructure.Persistence
     {
         private readonly IOptions<HostingSettings> options = options;
 
-        public void CreateDatabase()
+        public void CreateDatabaseIfNotExists()
         {
-            string[] connectionParts = options.Value.ConnectionString.Split(';');
-            Console.WriteLine($"conn str length {options.Value.ConnectionString.Length} characters, array length {connectionParts.Length}");
+            NpgsqlConnectionStringBuilder connStrBuilder = new NpgsqlConnectionStringBuilder(options.Value.ConnectionString);
 
-            string noDbConnStr = string.Join(';', connectionParts.Take(4)) + ";";
+            string defaultDbName = Environment.GetEnvironmentVariable("DEFAULT_DB_NAME") ?? "postgres";
+            string savedConnDbName = connStrBuilder.Database!;
 
-            string databaseNameIs = connectionParts[4];
-            string onlyDbName = databaseNameIs.Split('=')[1];
+            if (defaultDbName == savedConnDbName) { return; } // connection string already leads to default DB
 
-            using (NpgsqlConnection conn = new NpgsqlConnection(noDbConnStr))
+            connStrBuilder.Database = defaultDbName;
+            string connectionToDefaultDb = connStrBuilder.ToString();
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionToDefaultDb))
             {
                 conn.Open();
 
-                string checkDb = $"select oid from pg_database where datname = '{onlyDbName}';";
+                string checkDb = $"select oid from pg_database where datname = '{savedConnDbName}';";
                 object? existingDbEntry = conn.ExecuteScalar(checkDb);
 
                 if (existingDbEntry == null)
                 {
-                    string createDbQuery = $"CREATE DATABASE \"{onlyDbName}\";";
+                    string createDbQuery = $"CREATE DATABASE \"{savedConnDbName}\";";
                     conn.Execute(createDbQuery);
                 }
 
