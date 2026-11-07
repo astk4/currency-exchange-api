@@ -1,6 +1,5 @@
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -24,4 +23,8 @@ RUN dotnet publish "./CurrencyExchangeAPI.csproj" -c $BUILD_CONFIGURATION -o /ap
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+RUN chown -R app:app /app
+USER app
+
 ENTRYPOINT ["dotnet", "CurrencyExchangeAPI.dll"]

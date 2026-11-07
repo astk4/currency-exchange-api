@@ -95,6 +95,30 @@ jobs:
       - name: Run tests
         run: dotnet test --no-restore --verbosity normal
 
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./CurrencyExchangeAPI
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Set secrets into Fly.io app
+        run: |
+          flyctl secrets set Data__Postgres__Docker__ConnectionString="${{ secrets.REMOTE_DB_CONN_STRING }}" --stage
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
   slack_notify:
     needs: [build, test]
     if: always()
