@@ -9,8 +9,8 @@ namespace CurrencyExchangeAPI.Infrastructure
     {
         public RatesServiceEXRAPI(HttpClient client, IConfiguration conf, ILogger<RatesServiceEXRAPI> logger) : base(client, conf, logger)
         {
-            apiKeyConfPath = "API:ExchangeRate-API:Key";
-            baseUrlConfPath = "API:ExchangeRate-API:BasePath";
+            apiKeyConfPath = "API:ExchangeRateAPI:Key";
+            baseUrlConfPath = "API:ExchangeRateAPI:BasePath";
 
             ProcessConfigurationFile(conf);
 

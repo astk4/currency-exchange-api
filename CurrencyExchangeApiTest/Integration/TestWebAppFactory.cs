@@ -14,7 +14,7 @@ namespace CurrencyExchangeApiTest.Integration
                 Dictionary<string, string?> inMemory = new Dictionary<string, string?>
                 {
                     ["Data:Postgres:Main:ConnectionString"] = TestCredentialsUtils.DbConnectionString,
-                    ["API:ExchangeRate-API:Key"] = TestCredentialsUtils.EXRAPI.key,
+                    ["API:ExchangeRateAPI:Key"] = TestCredentialsUtils.EXRAPI.key,
                     ["API:OpenExchangeRates:Key"] = TestCredentialsUtils.OXR.key,
                 };
 
