@@ -489,3 +489,6 @@ $RECYCLE.BIN/
 secrets.json
 
 *.http
+
+# Local bind mounts from containers
+**/postgres_data_cea

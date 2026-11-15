@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    container_name: exchange-rates-api
+    ports:
+      - ${API_PORT_HTTP}:8080
+      - ${API_PORT_HTTPS}:8081
+    environment:
+      Data__Postgres__Docker__ConnectionString: "User ID=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Host=postgres;Port=${POSTGRES_PORT};Database=${POSTGRES_DB}"
+      API__OpenExchangeRates__Key: ${CURRENCY_DATA_API_KEY}
+      API__ExchangeRateAPI__Key: ${EXCHANGE_RATE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres-currency-exchange
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - ./postgres_data_cea:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_cea:
