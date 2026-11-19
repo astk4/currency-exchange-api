@@ -15,15 +15,15 @@ namespace CurrencyExchangeAPI.Infrastructure
             ProcessConfigurationFile(conf);
 
             _httpClient.BaseAddress = new Uri(_baseUrl);
-            serializerOptions.Converters.Insert(0, new CurrencyListJsonConverter());    
-        } 
+            serializerOptions.Converters.Insert(0, new CurrencyListJsonConverter());
+        }
 
         public async Task<Currency> GetNewCurrency(string code)
         {
             string url = $"currencies.json?app_id={_apiKey}";
 
             HttpResponseMessage responseMessage = await _httpClient.GetAsync(url);
-            
+
             LogCurrenciesAPI();
 
             List<Currency> currenciesOnline;
@@ -34,7 +34,7 @@ namespace CurrencyExchangeAPI.Infrastructure
 
             Currency? result = currenciesOnline.FirstOrDefault(c => c.Code == code);
 
-            if(result == null)
+            if (result == null)
             {
                 throw new KeyNotFoundException($"Currency code {code} is unknown!");
             }

@@ -32,13 +32,13 @@ namespace CurrencyExchangeApiTest.Integration
             dbConnection.Open();
         }
 
-        [Fact]  
+        [Fact]
 
         public async Task NotEnoughCurrenciesNoRefreshesTest()
         {
             mockConfig.Setup(a => a["RefreshMinutes"]).Returns("1");
 
-            IServiceScopeFactory scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>();   
+            IServiceScopeFactory scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>();
             IMemoryCache cache = factory.Services.GetRequiredService<IMemoryCache>();
 
             RatesRefreshService refreshService = new RatesRefreshService(mockConfig.Object, scopeFactory, cache, mockLogger.Object);
@@ -90,7 +90,7 @@ namespace CurrencyExchangeApiTest.Integration
 
             await refreshService.StartAsync(token);
 
-            using (PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMinutes(Convert.ToInt32(minutesInterval)*2.5)))
+            using (PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMinutes(Convert.ToInt32(minutesInterval) * 2.5)))
             {
                 await timer.WaitForNextTickAsync(token);
                 await cancelTokenSource.CancelAsync();
@@ -98,7 +98,7 @@ namespace CurrencyExchangeApiTest.Integration
 
             IEnumerable<Exchange> exchanges = await dbConnection.QueryAsync<Exchange>("SELECT * FROM EXCHANGES");
 
-            int tableSize = testCurrencies.Length*(testCurrencies.Length-1);
+            int tableSize = testCurrencies.Length * (testCurrencies.Length - 1);
 
             Assert.NotEmpty(exchanges);
             Assert.Equal(tableSize, exchanges.Count());

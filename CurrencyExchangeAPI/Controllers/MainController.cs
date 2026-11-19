@@ -14,13 +14,13 @@ namespace CurrencyExchangeAPI.Controllers
         private readonly IDbService dbService;
         private readonly CurrencyInfoServiceOXR currencyInfoService;
         private readonly RatesServiceEXRAPI ratesService;
-        
+
         private readonly IMemoryCache memoryCache;
         private readonly string cacheKeyForRates;
 
         private readonly ILogger<MainController> logger;
 
-        public MainController(IDbService dbService, IServiceProvider isp, IMemoryCache memoryCache, 
+        public MainController(IDbService dbService, IServiceProvider isp, IMemoryCache memoryCache,
                               IConfiguration conf, ILogger<MainController> logger)
         {
             this.dbService = dbService;
@@ -44,7 +44,7 @@ namespace CurrencyExchangeAPI.Controllers
         {
             List<Currency> allInDb = await dbService.GetAllCurrencies();
 
-            if(!allInDb.Any())
+            if (!allInDb.Any())
             {
                 LogNoCurrenciesRetrieved();
                 return NoContent();
@@ -76,7 +76,7 @@ namespace CurrencyExchangeAPI.Controllers
                 return NotFound();
             }
 
-            if(allInDb.Count == 1)
+            if (allInDb.Count == 1)
             {
                 LogOnlyOneCurrency(code);
                 return BadRequest($"The requested currency is the only one in the available list. Add more to request exchange rates between them.");
@@ -84,11 +84,11 @@ namespace CurrencyExchangeAPI.Controllers
 
             List<Exchange>? allFromCache = memoryCache.Get<List<Exchange>>(cacheKeyForRates);
 
-            if (allFromCache!=null)
+            if (allFromCache != null)
             {
                 List<Exchange> _basedOnRequested = allFromCache.Where(e => e.BaseCode == code).ToList();
 
-                if(_basedOnRequested.Count == allInDb.Count-1)
+                if (_basedOnRequested.Count == allInDb.Count - 1)
                 {
                     LogRatesRetrieved(code, "cache");
                     return new JsonResult(_basedOnRequested);
@@ -99,11 +99,12 @@ namespace CurrencyExchangeAPI.Controllers
 
             IEnumerable<Exchange> fromExtApiWithoutSelf = fromExtAPI.Where(e => Math.Abs(e.Rate - 1) > 0.00001);
 
-            if(allFromCache == null)
+            if (allFromCache == null)
             {
                 memoryCache.Set(cacheKeyForRates, new List<Exchange>(fromExtApiWithoutSelf));
             }
-            else {
+            else
+            {
                 List<Exchange> partialCacheUpd = allFromCache.Where(e => e.BaseCode != code).Concat(fromExtApiWithoutSelf).ToList();
                 memoryCache.Set(cacheKeyForRates, partialCacheUpd);
             }
@@ -127,19 +128,21 @@ namespace CurrencyExchangeAPI.Controllers
         {
             Currency? alreadyExisting = await dbService.GetCurrency(code);
 
-            if(alreadyExisting!=null)
+            if (alreadyExisting != null)
             {
                 LogAlreadySaved(code);
-                return new ObjectResult($"Currency with the code {code} ({alreadyExisting.Name}) already present in the list.") { 
+                return new ObjectResult($"Currency with the code {code} ({alreadyExisting.Name}) already present in the list.")
+                {
                     StatusCode = (int)HttpStatusCode.MethodNotAllowed
                 };
             }
 
             Currency result;
-            try {
+            try
+            {
                 result = await currencyInfoService.GetNewCurrency(code);
             }
-            catch(KeyNotFoundException e)
+            catch (KeyNotFoundException e)
             {
                 LogDoesNotExist(code);
                 return NotFound(e.Message);

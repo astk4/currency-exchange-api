@@ -8,13 +8,14 @@ namespace CurrencyExchangeAPI.Infrastructure
     {
         public override List<Currency>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            string code = default, 
+            string code = default,
                    name = default;
-            
+
             List<Currency> result = new List<Currency>();
 
-            do {
-                switch(reader.TokenType)
+            do
+            {
+                switch (reader.TokenType)
                 {
                     case JsonTokenType.PropertyName:
                         code = reader.GetString();
@@ -28,7 +29,7 @@ namespace CurrencyExchangeAPI.Infrastructure
                         continue;
                 }
             }
-            while(reader.Read());
+            while (reader.Read());
 
             return result;
         }
@@ -36,7 +37,7 @@ namespace CurrencyExchangeAPI.Infrastructure
         public override void Write(Utf8JsonWriter writer, List<Currency> value, JsonSerializerOptions options)
         {
             writer.WriteStartArray();
-            foreach(Currency currency in value)
+            foreach (Currency currency in value)
             {
                 writer.WriteStartObject();
 

@@ -12,7 +12,7 @@ namespace CurrencyExchangeAPI.Infrastructure.Logging
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             StringBuilder logMessageSb = new StringBuilder();
-            
+
             logMessageSb.Append(logLevel.ToString());
             logMessageSb.Append(": [");
             logMessageSb.Append(eventId.Id);

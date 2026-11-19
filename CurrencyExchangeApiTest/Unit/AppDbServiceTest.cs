@@ -49,7 +49,7 @@ namespace CurrencyExchangeApiTest.Unit
             Currency? result = await dbService.GetCurrency("CAD");
 
             Assert.NotNull(result);
-            Assert.Equal("CAD", result.Code);   
+            Assert.Equal("CAD", result.Code);
         }
 
         [Fact]
@@ -71,15 +71,15 @@ namespace CurrencyExchangeApiTest.Unit
         [Fact]
         public async Task AddingCurrencyOkTest()
         {
-            Currency entity = new Currency() { Code="ARS", Name= "Argentine Peso" };
-           
-            Exception exc = await Record.ExceptionAsync(async () => await dbService.AddCurrency(entity));           
+            Currency entity = new Currency() { Code = "ARS", Name = "Argentine Peso" };
+
+            Exception exc = await Record.ExceptionAsync(async () => await dbService.AddCurrency(entity));
 
             IEnumerable<Currency> tableContent = await dbConnection.QueryAsync<Currency>(selectCurrenciesQuery);
             Currency result = tableContent.FirstOrDefault();
 
             Assert.Null(exc);
-            Assert.Equal(1, tableContent.Count());
+            Assert.Single(tableContent);
             Assert.Equal(entity, result);
         }
 
@@ -112,7 +112,7 @@ namespace CurrencyExchangeApiTest.Unit
             List<Currency> allCurrencies = await dbService.GetAllCurrencies();
 
             Assert.Equal(testCurrencies.Length, allCurrencies.Count);
-            for(int i = 0; i < testCurrencies.Length; i++)
+            for (int i = 0; i < testCurrencies.Length; i++)
             {
                 Assert.Equal(testCurrencies[i], allCurrencies[i]);
             }
@@ -136,13 +136,13 @@ namespace CurrencyExchangeApiTest.Unit
                 new Exchange() { BaseCode="BGN", PriceCode="USD", Rate =0.5889, MeasuredAt =default }
             };
 
-            Exception exc = await Record.ExceptionAsync(async() => await dbService.AddExchangeRates(testExchanges));
+            Exception exc = await Record.ExceptionAsync(async () => await dbService.AddExchangeRates(testExchanges));
 
             Exchange[] resultExchanges = (await dbConnection.QueryAsync<Exchange>("SELECT * FROM exchanges")).ToArray();
 
             Assert.Null(exc);
             Assert.Equal(testExchanges.Length, resultExchanges.Length);
-            for(int i = 0; i < testExchanges.Length; i++)
+            for (int i = 0; i < testExchanges.Length; i++)
             {
                 Assert.Equal(testExchanges[i], resultExchanges[i]);
             }
@@ -216,7 +216,7 @@ namespace CurrencyExchangeApiTest.Unit
 
             Assert.Null(exc);
             Assert.Equal(6, exchangesAfterRefresh.Count());
-            foreach(Exchange ch in exchangesAfterRefresh)
+            foreach (Exchange ch in exchangesAfterRefresh)
             {
                 Assert.True(ch.MeasuredAt > dtBefore);
             }
@@ -287,12 +287,12 @@ namespace CurrencyExchangeApiTest.Unit
 
         public void Dispose()
         {
-            using(IDbCommand cleanCommand = dbConnection.CreateCommand())
+            using (IDbCommand cleanCommand = dbConnection.CreateCommand())
             {
                 cleanCommand.CommandText = cleanDoubleQuery;
                 cleanCommand.ExecuteNonQuery();
             }
-            dbConnection.Close();  
+            dbConnection.Close();
             dbConnection.Dispose();
             dbService.Dispose();
         }

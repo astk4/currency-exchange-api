@@ -20,10 +20,10 @@ namespace CurrencyExchangeApiTest.Integration
         [InlineData("TRY", "Turkish Lira")]
         public async Task FindingExistingCurrencyTest(string code, string name)
         {
-            Currency foundCurrency=null;
+            Currency? foundCurrency = null;
 
             Exception exc = await Record.ExceptionAsync(async () => foundCurrency = await _service.GetNewCurrency(code));
-            
+
             Assert.Null(exc);
             Assert.NotNull(foundCurrency);
             Assert.Equal(code, foundCurrency.Code);
@@ -34,7 +34,7 @@ namespace CurrencyExchangeApiTest.Integration
         public async Task ErrorNotExistingCurrencyTest()
         {
             string nonExistentCode = "ABC";
-            Currency foundCurrency = null;
+            Currency? foundCurrency = null;
 
             Exception exc = await Record.ExceptionAsync(async () => foundCurrency = await _service.GetNewCurrency(nonExistentCode));
 

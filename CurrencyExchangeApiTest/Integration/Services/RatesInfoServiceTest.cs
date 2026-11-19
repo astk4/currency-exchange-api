@@ -27,13 +27,13 @@ namespace CurrencyExchangeApiTest.Integration
         {
             Currency[] requestedCurrencies = new Currency[4]
             {
-                new Currency() { Code = "UAH" }, 
+                new Currency() { Code = "UAH" },
                 new Currency() { Code = "RON" },
                 new Currency() { Code = "ILS" },
                 new Currency() { Code = "KZT" }
             };
 
-            List<Exchange> foundExchanges = null;
+            List<Exchange>? foundExchanges = null;
 
             Exception exc = await Record.ExceptionAsync(async () => foundExchanges = await _service.GetRatesFor(baseCode, requestedCurrencies));
 
@@ -43,9 +43,9 @@ namespace CurrencyExchangeApiTest.Integration
 
             Assert.Equal(requestedCurrencies.Length, foundExchanges.Count());
 
-            for(int i = 0; i < requestedCurrencies.Length; i++)
+            for (int i = 0; i < requestedCurrencies.Length; i++)
             {
-                Assert.True(requestedCurrencies.Any(c => c.Code == foundExchanges[i].PriceCode));
+                Assert.Contains(requestedCurrencies, c => c.Code == foundExchanges[i].PriceCode);
                 Assert.Equal(baseCode, foundExchanges[i].BaseCode);
             }
         }
@@ -63,13 +63,13 @@ namespace CurrencyExchangeApiTest.Integration
                 new Currency() { Code = "KZT" }
             };
 
-            List<Exchange> foundExchanges = null;
+            List<Exchange>? foundExchanges = null;
 
             Exception exc = await Record.ExceptionAsync(async () => foundExchanges = await _service.GetRatesFor(baseCode, requestedCurrencies));
 
             Assert.Null(foundExchanges);
             Assert.NotNull(exc);
-            Assert.IsType(typeof(KeyNotFoundException), exc);
+            Assert.IsType<KeyNotFoundException>(exc);
             Assert.Equal("Currency code AAA is unknown!", exc.Message);
         }
     }

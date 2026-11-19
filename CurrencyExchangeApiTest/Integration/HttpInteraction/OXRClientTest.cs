@@ -35,7 +35,7 @@ namespace CurrencyExchangeApiTest.Integration
 
             Dictionary<string, string> currencies;
 
-            using(Stream contentStream = await responseMessage.Content.ReadAsStreamAsync())
+            using (Stream contentStream = await responseMessage.Content.ReadAsStreamAsync())
             {
                 currencies = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(contentStream);
             }

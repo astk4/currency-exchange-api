@@ -26,7 +26,7 @@ namespace CurrencyExchangeAPI.Infrastructure
 
             _dbConnection = new NpgsqlConnection(options.Value.ConnectionString);
             _dbConnection.Open();
-            
+
             LogServiceStart();
         }
 
@@ -47,7 +47,7 @@ namespace CurrencyExchangeAPI.Infrastructure
 
         public async Task RefreshExchangeRates(IEnumerable<Exchange> rates)
         {
-            using (IDbTransaction tran = _dbConnection.BeginTransaction()) 
+            using (IDbTransaction tran = _dbConnection.BeginTransaction())
             {
                 await _dbConnection.ExecuteAsync("DELETE FROM exchanges;");
 

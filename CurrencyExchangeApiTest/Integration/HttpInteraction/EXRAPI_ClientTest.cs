@@ -43,7 +43,7 @@ namespace CurrencyExchangeApiTest.Integration
             Assert.Equal(successMessage, resultNode["result"].GetValue<string>());
             Assert.Equal(currencyCode, resultNode["base_code"].GetValue<string>());
 
-            Assert.True(daysDiff<1);
+            Assert.True(daysDiff < 1);
             Assert.True(resultNode["conversion_rates"].AsObject().Count > 1);
         }
 

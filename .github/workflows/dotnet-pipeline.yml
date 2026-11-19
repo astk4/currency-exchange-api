@@ -35,8 +35,23 @@ jobs:
           path: |
             **/net8.0
 
-  test:
+  lint:
     needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Lint
+        run: dotnet format --verify-no-changes
+
+  test:
+    needs: lint
     runs-on: ubuntu-latest
 
     services:
@@ -123,7 +138,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   slack_notify:
-    needs: [build, test]
+    needs: [build, lint, test]
     if: always()
     runs-on: ubuntu-latest
 
@@ -145,6 +160,20 @@ jobs:
           fi
 
           echo "BUILD_MSG=${MESSAGE1}" >> $GITHUB_ENV
+
+      - name: Get Lint message
+        run: |
+          MESSAGE3="*Lint*: "
+
+          if [[ "${{ needs.lint.result }}" == "success" ]]; then
+            MESSAGE3="${MESSAGE3} OK ✅"
+          elif [[ "${{ needs.lint.result }}" == "failure" ]]; then
+            MESSAGE3="${MESSAGE3} failed ❌ "
+          else
+            MESSAGE3="${MESSAGE3} ${{ needs.lint.result }}⚠️"
+          fi
+
+          echo "LINT_MSG=${MESSAGE3}" >> $GITHUB_ENV
       
       - name: Get Test message
         run: |
@@ -216,6 +245,10 @@ jobs:
                     {
                       "type": "mrkdwn",
                       "text": "${{ env.BUILD_MSG }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "${{ env.LINT_MSG }}"
                     },
                     {
                       "type": "mrkdwn",

@@ -15,7 +15,7 @@ namespace CurrencyExchangeAPI
 
             builder.Services.AddControllers()
                             .AddJsonOptions(options =>
-                                { 
+                                {
                                     options.JsonSerializerOptions.Converters.Insert(0, new CurrencyListJsonConverter());
                                     options.JsonSerializerOptions.Converters.Insert(1, new ExchangeRatesJsonConverter());
                                 });
@@ -43,7 +43,8 @@ namespace CurrencyExchangeAPI
                     options.ColorBehavior = LoggerColorBehavior.Enabled;
                 });
             }
-            else {
+            else
+            {
                 string textFilePath = builder.Configuration["Logging:FileDestination"]!.ToString();
 
                 if (!Path.IsPathRooted(textFilePath))

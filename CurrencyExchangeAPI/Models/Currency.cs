@@ -1,4 +1,4 @@
-﻿using CurrencyExchangeAPI.Infrastructure;
+using CurrencyExchangeAPI.Infrastructure;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -13,10 +13,15 @@ namespace CurrencyExchangeAPI.Models
 
         public override bool Equals(object? obj)
         {
-            Currency other = obj as Currency;
-            if(other == null) return false;  
+            Currency? other = obj as Currency;
+            if (other == null) return false;
 
             return this.Code == other.Code && this.Name == other.Name;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Code.GetHashCode() + this.Name.GetHashCode();
         }
     }
 }

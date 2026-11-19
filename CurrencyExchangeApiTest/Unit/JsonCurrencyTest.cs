@@ -27,7 +27,7 @@ namespace CurrencyExchangeApiTest.Unit
             IEnumerable<string> keyValuePairs = codes.Zip(names, (code, name) => $" \"{code}\" : \"{name}\"");
 
             StringBuilder jsonBuilder = new StringBuilder("{");
-            foreach(string pair in keyValuePairs)
+            foreach (string pair in keyValuePairs)
             {
                 jsonBuilder.Append(pair);
                 jsonBuilder.Append(", ");
@@ -38,12 +38,12 @@ namespace CurrencyExchangeApiTest.Unit
             List<Currency>? deserializedCurrencies = null;
 
             Exception ex = Record.Exception(() => deserializedCurrencies = JsonSerializer.Deserialize<List<Currency>>(jsonBuilder.ToString(), optionsLikeInProgram));
-        
+
             Assert.Null(ex);
             Assert.NotNull(deserializedCurrencies);
             Assert.DoesNotContain(null, deserializedCurrencies);
 
-            for(int i = 0; i < codes.Length; i++)
+            for (int i = 0; i < codes.Length; i++)
             {
                 Assert.Equal(codes[i], deserializedCurrencies[i].Code);
                 Assert.Equal(names[i], deserializedCurrencies[i].Name);

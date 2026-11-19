@@ -1,4 +1,4 @@
-﻿using Dapper.FluentMap.Mapping;
+using Dapper.FluentMap.Mapping;
 using System.ComponentModel.DataAnnotations;
 
 namespace CurrencyExchangeAPI.Models
@@ -28,7 +28,7 @@ namespace CurrencyExchangeAPI.Models
 
         public override bool Equals(object? obj)
         {
-            Exchange other = obj as Exchange;
+            Exchange? other = obj as Exchange;
 
             if (other == null) return false;
 
@@ -37,6 +37,12 @@ namespace CurrencyExchangeAPI.Models
                    && this.MeasuredAt.Date == other.MeasuredAt.Date
                    && Math.Truncate(this.MeasuredAt.TimeOfDay.TotalSeconds) == Math.Truncate(other.MeasuredAt.TimeOfDay.TotalSeconds);
 
+        }
+
+        public override int GetHashCode()
+        {
+            return this.BaseCode.GetHashCode() + this.PriceCode.GetHashCode()
+               + (int)this.Rate + MeasuredAt.GetHashCode();
         }
     }
 }

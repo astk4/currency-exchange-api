@@ -24,7 +24,7 @@ namespace CurrencyExchangeAPI.Infrastructure
 
             HttpResponseMessage responseMessage = await _httpClient.GetAsync(url);
 
-            if(responseMessage.StatusCode == HttpStatusCode.NotFound)
+            if (responseMessage.StatusCode == HttpStatusCode.NotFound)
             {
                 throw new KeyNotFoundException($"Currency code {code} is unknown!");
             }
@@ -43,7 +43,7 @@ namespace CurrencyExchangeAPI.Infrastructure
             List<Exchange> onlineExchanges = objWithRates.AsObject().Deserialize<List<Exchange>>(serializerOptions);
 
             List<Exchange> exclusiveExchanges = onlineExchanges.Where(oex => exclusive.Any(c => c.Code == oex.PriceCode)).ToList();
-            foreach(Exchange ex in exclusiveExchanges)
+            foreach (Exchange ex in exclusiveExchanges)
             {
                 ex.BaseCode = code;
                 ex.MeasuredAt = savedGetTime;

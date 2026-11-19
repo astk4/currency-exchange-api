@@ -30,7 +30,7 @@ namespace CurrencyExchangeAPI.Infrastructure
         {
             using (PeriodicTimer timer = new PeriodicTimer(refreshInterval))
             {
-                while(!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
+                while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                 {
                     using (IServiceScope scope = serviceFactory.CreateScope())
                     {
@@ -39,10 +39,10 @@ namespace CurrencyExchangeAPI.Infrastructure
                         IDbService dbService = scope.ServiceProvider.GetRequiredService<IDbService>();
                         List<Currency> availableCurrencies = await dbService.GetAllCurrencies();
 
-                        if(availableCurrencies.Count < 2) 
+                        if (availableCurrencies.Count < 2)
                         {
                             LogNoNeedToCache();
-                            continue; 
+                            continue;
                         }
 
                         RatesServiceEXRAPI ratesApiService = scope.ServiceProvider.GetRequiredService<RatesServiceEXRAPI>();
@@ -52,18 +52,18 @@ namespace CurrencyExchangeAPI.Infrastructure
                         foreach (Currency currency in availableCurrencies)
                         {
                             List<Exchange> basedOnCrt = await ratesApiService.GetRatesFor(currency.Code, availableCurrencies);
-                        
-                            exchangesGoingToDb.AddRange(basedOnCrt.Where(e => Math.Abs(e.Rate-1)>0.000001));
+
+                            exchangesGoingToDb.AddRange(basedOnCrt.Where(e => Math.Abs(e.Rate - 1) > 0.000001));
                         }
 
                         var entryOptions = new MemoryCacheEntryOptions()
                                                 .SetSlidingExpiration(refreshInterval)
-                                                .SetAbsoluteExpiration(refreshInterval*1.1)
+                                                .SetAbsoluteExpiration(refreshInterval * 1.1)
                                                 .SetPriority(CacheItemPriority.High);
 
                         await dbService.RefreshExchangeRates(exchangesGoingToDb);
                         memoryCache.Set(cacheKeyForRates, exchangesGoingToDb, entryOptions);
-                        
+
                         LogRatesCaching(exchangesGoingToDb.Count);
                     }
                 }

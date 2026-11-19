@@ -8,12 +8,13 @@ namespace CurrencyExchangeAPI.Infrastructure
     {
         public override List<Exchange>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            string code = default;
+            string? code = default;
             double rate = default;
 
             List<Exchange> result = new List<Exchange>();
 
-            do {
+            do
+            {
                 switch (reader.TokenType)
                 {
                     case JsonTokenType.PropertyName:
