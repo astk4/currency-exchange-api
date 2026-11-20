@@ -1,4 +1,4 @@
-name: Build -> Test -> Slack Notify
+name: Build -> Lint -> Test -> Slack Notify
 
 on:
   push:
@@ -9,13 +9,18 @@ on:
 
 env:
   DOTNET_VERSION: '8.0'
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout code
+        uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -40,7 +45,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout code
+        uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -50,12 +56,12 @@ jobs:
       - name: Lint
         run: dotnet format --verify-no-changes
 
-  test:
+  unit-test:
     needs: lint
     runs-on: ubuntu-latest
 
     services:
-      postgres:
+      postgres: &postgres_config
         image: postgres:16
         env:
           POSTGRES_USER: postgres
@@ -72,53 +78,111 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-
+    
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install dependencies
-        run: dotnet restore
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: release
 
       - name: Fill configuration files
         run: |
-          cd CurrencyExchangeApiTest/
-
-          echo "writing db connection string..."
-          echo -n "User ID=postgres;Password=" >> test-db-connection-string.txt
-          echo -n ${{ secrets.PG_DB_PASSWORD }}  >> test-db-connection-string.txt
-          echo -n ";Host=localhost;Port=5432;Database=CurrencyExchangePracticeTEST;" >> test-db-connection-string.txt
-
-          echo "writing api 1 config (open exchange rates)"
-          echo -n "API_KEY=" >> test-config-oxr.txt
-          echo ${{ secrets.CURRENCY_DATA_API_KEY }} >> test-config-oxr.txt
-          echo "BASE_URL=https://openexchangerates.org/api/" >> test-config-oxr.txt
-
-          echo "writing api 2 config (exchange rates v6)"
-          echo -n "API_KEY=" >> test-config-rates.txt
-          echo ${{ secrets.EXCHANGE_RATE_API_KEY }} >> test-config-rates.txt
-          echo "BASE_URL=https://v6.exchangerate-api.com/v6/" >> test-config-rates.txt
-
-          cd ../
+          ./.github/scripts/fill_in_config.sh CurrencyExchangeApiTest/bin/Release/net8.0
+        env: &test_env
+          PG_DB_PASSWORD: ${{ secrets.PG_DB_PASSWORD }}
+          CURRENCY_DATA_API_KEY: ${{ secrets.CURRENCY_DATA_API_KEY }}
+          EXCHANGE_RATE_API_KEY: ${{ secrets.EXCHANGE_RATE_API_KEY }}
 
       - name: Add tables into test database
         run: psql -h localhost -p 5432 -U postgres -d CurrencyExchangePracticeTEST -f CurrencyExchangeAPI/create_tables.sql
         env:
           PGPASSWORD: ${{ secrets.PG_DB_PASSWORD }}
 
-      - name: Run tests
-        run: dotnet test --no-restore --verbosity normal
+      - name: Run unit tests
+        run: dotnet test --no-build --configuration Release --filter FullyQualifiedName~CurrencyExchangeApiTest.Unit --verbosity normal
+
+  integration-test-short:
+    needs: lint
+    runs-on: ubuntu-latest
+
+    services:
+      postgres: *postgres_config
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: release
+
+      - name: Fill configuration files
+        run: |
+          ./.github/scripts/fill_in_config.sh CurrencyExchangeApiTest/bin/Release/net8.0
+        env: *test_env
+
+      - name: Add tables into test database
+        run: psql -h localhost -p 5432 -U postgres -d CurrencyExchangePracticeTEST -f CurrencyExchangeAPI/create_tables.sql
+        env:
+          PGPASSWORD: ${{ secrets.PG_DB_PASSWORD }}
+
+      - name: Run short integration tests
+        run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName~CurrencyExchangeApiTest.Integration&FullyQualifiedName!~RefreshBackgroundServiceTest" --verbosity normal
+
+  integration-test-long:
+    needs: integration-test-short
+    runs-on: ubuntu-latest
+
+    services:
+      postgres: *postgres_config
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+    
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: release
+
+      - name: Fill configuration files
+        run: |
+          ./.github/scripts/fill_in_config.sh CurrencyExchangeApiTest/bin/Release/net8.0
+        env: *test_env
+
+      - name: Add tables into test database
+        run: psql -h localhost -p 5432 -U postgres -d CurrencyExchangePracticeTEST -f CurrencyExchangeAPI/create_tables.sql
+        env:
+          PGPASSWORD: ${{ secrets.PG_DB_PASSWORD }}
+
+      - name: Run long integration tests
+        run: dotnet test --no-build --configuration Release --filter FullyQualifiedName~CurrencyExchangeApiTest.Integration.RefreshBackgroundServiceTest --verbosity normal
 
   deploy:
-    needs: test
+    needs: [unit-test, integration-test-short, integration-test-long]
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./CurrencyExchangeAPI
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout code
+        uses: actions/checkout@v7
 
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
@@ -138,7 +202,12 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   slack_notify:
-    needs: [build, lint, test]
+    needs: 
+      - build
+      - lint
+      - unit-test
+      - integration-test-short
+      - integration-test-long
     if: always()
     runs-on: ubuntu-latest
 
@@ -147,51 +216,53 @@ jobs:
         id: short_commit
         run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
 
+      - name: Get commit author name
+        id: commit_author
+        run: echo "AUTHOR_NAME=${{ github.event.head_commit.author.username }}" >> $GITHUB_ENV
+
+      - name: Get commit message
+        id: commit_msg
+        run: echo "COMMIT_MESSAGE=${{ github.event.head_commit.message }}" >> $GITHUB_ENV
+
+      - name: Checkout code (necessary to get scripts)
+        uses: actions/checkout@v7
+
       - name: Get Build message
         run: |
-          MESSAGE1="*Build*: "
-
-          if [[ "${{ needs.build.result }}" == "success" ]]; then
-            MESSAGE1="${MESSAGE1} OK ✅"
-          elif [[ "${{ needs.build.result }}" == "failure" ]]; then
-            MESSAGE1="${MESSAGE1} failed ❌ "
-          else
-            MESSAGE1="${MESSAGE1} ${{ needs.build.result }}⚠️"
-          fi
+          MESSAGE1=$( .github/scripts/simple_status_render.sh Build ${{ needs.build.result }} )
 
           echo "BUILD_MSG=${MESSAGE1}" >> $GITHUB_ENV
 
       - name: Get Lint message
         run: |
-          MESSAGE3="*Lint*: "
+          MESSAGE2=$( .github/scripts/simple_status_render.sh Lint ${{ needs.lint.result }} )
 
-          if [[ "${{ needs.lint.result }}" == "success" ]]; then
-            MESSAGE3="${MESSAGE3} OK ✅"
-          elif [[ "${{ needs.lint.result }}" == "failure" ]]; then
-            MESSAGE3="${MESSAGE3} failed ❌ "
-          else
-            MESSAGE3="${MESSAGE3} ${{ needs.lint.result }}⚠️"
-          fi
+          echo "LINT_MSG=${MESSAGE2}" >> $GITHUB_ENV
 
-          echo "LINT_MSG=${MESSAGE3}" >> $GITHUB_ENV
-      
-      - name: Get Test message
+      - name: Get Unit Test message
         run: |
-          MESSAGE2="*Test*: "
+          MESSAGE3=$( .github/scripts/simple_status_render.sh Unit ${{ needs.unit-test.result }} )
 
-          if [[ "${{ needs.test.result }}" == "success" ]]; then
-            MESSAGE2="${MESSAGE2} OK ✅"
-          elif [[ "${{ needs.test.result }}" == "failure" ]]; then
-            MESSAGE2="${MESSAGE2} failed ❌ "
+          echo "UNIT_MSG=${MESSAGE3}" >> $GITHUB_ENV
+          
+      
+      - name: Get Integration Test message
+        run: |
+          MESSAGE4="*Integration*: "
+
+          if [[ "${{ needs.integration-test-short.result }}" == "success" && "${{ needs.integration-test-long.result }}" == "success" ]]; then
+            MESSAGE4="${MESSAGE4} OK ✅"
+          elif [[ "${{ needs.integration-test-short.result }}" == "failure" || "${{ needs.integration-test-long.result }}" == "failure" ]]; then
+            MESSAGE4="${MESSAGE4} failed ❌ "
           else
-            MESSAGE2="${MESSAGE2} ${{ needs.test.result }}⚠️"
+            MESSAGE4="️skipped and/or canceled️ ⚠️"
           fi
 
-          echo "TEST_MSG=${MESSAGE2}" >> $GITHUB_ENV
+          echo "INT_MSG=${MESSAGE4}" >> $GITHUB_ENV
 
       - name: Get Slack message title
         run: |
-          if [[ "${{ needs.build.result }}" == "success" && "${{ needs.test.result }}" == "success" ]]; then
+          if [[ "${{ needs.unit-test.result }}" == "success" && "${{ needs.integration-test-long.result }}" == "success" ]]; then
             TITLE="✅ *GitHub Actions Pipeline Succeeded*"
           else
             TITLE="ℹ️ *GitHub Actions Pipeline Finished*"
@@ -205,56 +276,5 @@ jobs:
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ env.MSG_TITLE }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Repo*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Commit*\n<${{ github.event.head_commit.url }}|${{ env.SHORT_SHA }}>"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Author*\n${{ github.event.head_commit.author.username }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Event Name*\n`${{ github.event_name }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Workflow*\n`${{ github.workflow }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Message*\n${{ github.event.head_commit.message }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "${{ env.BUILD_MSG }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "${{ env.LINT_MSG }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "${{ env.TEST_MSG }}"
-                    }
-                  ]
-                }
-              ]
-            }
+          payload-file-path: ./.github/resources/slack_message_blocks.json
+          payload-templated: true

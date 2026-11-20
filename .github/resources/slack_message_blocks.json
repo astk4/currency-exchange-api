@@ -1,0 +1,52 @@
+{
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "${{ env.MSG_TITLE }}"
+			}
+		},
+		{
+			"type": "section",
+			"fields": [
+				{
+					"type": "mrkdwn",
+					"text": "*Repo*\n<https://github.com/${{ env.GITHUB_REPOSITORY }}|${{ env.GITHUB_REPOSITORY }}>"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Commit*\n<${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/commit/${{ env.GITHUB_SHA }}|${{ env.SHORT_SHA }}>"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Author*\n${{ env.AUTHOR_NAME }}"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Event Name*\n`${{ env.GITHUB_EVENT_NAME }}`"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Workflow*\n`${{ env.GITHUB_WORKFLOW }}`"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Message*\n${{ env.COMMIT_MESSAGE }}"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "${{ env.BUILD_MSG }}"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "${{ env.LINT_MSG }}"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "*Test*:\n- ${{ env.UNIT_MSG }} \n- ${{ env.INT_MSG }}\n"
+				}
+			]
+		}
+	]
+}
