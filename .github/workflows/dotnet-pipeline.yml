@@ -208,6 +208,7 @@ jobs:
       - unit-test
       - integration-test-short
       - integration-test-long
+      - deploy
     if: always()
     runs-on: ubuntu-latest
 
@@ -245,7 +246,6 @@ jobs:
 
           echo "UNIT_MSG=${MESSAGE3}" >> $GITHUB_ENV
           
-      
       - name: Get Integration Test message
         run: |
           MESSAGE4="*Integration*: "
@@ -260,9 +260,15 @@ jobs:
 
           echo "INT_MSG=${MESSAGE4}" >> $GITHUB_ENV
 
+      - name: Get Deploy message
+        run: |
+          MESSAGE5=$( .github/scripts/simple_status_render.sh Deploy ${{ needs.deploy.result }} )
+
+          echo "DEPLOY_MSG=${MESSAGE5}" >> $GITHUB_ENV
+
       - name: Get Slack message title
         run: |
-          if [[ "${{ needs.unit-test.result }}" == "success" && "${{ needs.integration-test-long.result }}" == "success" ]]; then
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
             TITLE="✅ *GitHub Actions Pipeline Succeeded*"
           else
             TITLE="ℹ️ *GitHub Actions Pipeline Finished*"

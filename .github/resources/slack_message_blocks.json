@@ -45,6 +45,10 @@
 				{
 					"type": "mrkdwn",
 					"text": "*Test*:\n- ${{ env.UNIT_MSG }} \n- ${{ env.INT_MSG }}\n"
+				},
+				{
+					"type": "mrkdwn",
+					"text": "${{ env.DEPLOY_MSG }}"
 				}
 			]
 		}
