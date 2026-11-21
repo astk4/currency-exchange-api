@@ -35,7 +35,7 @@ namespace CurrencyExchangeApiTest.Integration
 
             string updateString = resultNode["time_last_update_utc"].GetValue<string>();
             DateTime updateDT = DateTime.Parse(updateString, CultureInfo.InvariantCulture);
-            double daysDiff = (DateTime.Now - updateDT).TotalDays;
+            double daysDiff = (DateTime.UtcNow - updateDT).TotalDays;
             Assert.True(responseMessage.IsSuccessStatusCode);
             Assert.NotNull(responseMessage.Content.Headers.ContentType);
             Assert.Equal(contentTypeStr, responseMessage.Content.Headers.ContentType.MediaType);

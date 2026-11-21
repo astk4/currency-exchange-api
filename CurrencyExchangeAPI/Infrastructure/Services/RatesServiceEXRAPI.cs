@@ -31,7 +31,7 @@ namespace CurrencyExchangeAPI.Infrastructure
 
             LogRatesAPI(code);
 
-            DateTime savedGetTime = DateTime.Now;
+            DateTime savedGetTime = DateTime.UtcNow;
 
             JsonNode resultNode;
             using (Stream contentStream = await responseMessage.Content.ReadAsStreamAsync())

@@ -131,7 +131,7 @@ namespace CurrencyExchangeApiTest.Unit
 
             Exchange[] testExchanges = new Exchange[3]
             {
-                new Exchange() { BaseCode="USD", PriceCode="GBP", Rate=0.7365, MeasuredAt =DateTime.Now },
+                new Exchange() { BaseCode="USD", PriceCode="GBP", Rate=0.7365, MeasuredAt =DateTime.UtcNow },
                 new Exchange() { BaseCode="GBP", PriceCode="BGN", Rate = 2.2905, MeasuredAt =default },
                 new Exchange() { BaseCode="BGN", PriceCode="USD", Rate =0.5889, MeasuredAt =default }
             };
@@ -182,7 +182,7 @@ namespace CurrencyExchangeApiTest.Unit
                 new Currency() { Code = "BGN", Name="" }
             };
 
-            DateTime dtBefore = DateTime.Now - TimeSpan.FromDays(1);
+            DateTime dtBefore = DateTime.UtcNow - TimeSpan.FromDays(1);
 
             Exchange[] testExchanges1 = new Exchange[6]
             {
@@ -200,14 +200,14 @@ namespace CurrencyExchangeApiTest.Unit
 
             Exchange[] testExchanges2 = new Exchange[6]
             {
-                new Exchange() { BaseCode="USD", PriceCode="GBP", Rate=0.7365, MeasuredAt=DateTime.Now },
-                new Exchange() { BaseCode="USD", PriceCode="BGN", Rate = 1.6912, MeasuredAt=DateTime.Now  },
+                new Exchange() { BaseCode="USD", PriceCode="GBP", Rate=0.7365, MeasuredAt=DateTime.UtcNow },
+                new Exchange() { BaseCode="USD", PriceCode="BGN", Rate = 1.6912, MeasuredAt=DateTime.UtcNow  },
 
-                new Exchange() { BaseCode="GBP", PriceCode="USD", Rate=1.3471, MeasuredAt=DateTime.Now  },
-                new Exchange() { BaseCode="GBP", PriceCode="BGN", Rate = 2.2905, MeasuredAt=DateTime.Now  },
+                new Exchange() { BaseCode="GBP", PriceCode="USD", Rate=1.3471, MeasuredAt=DateTime.UtcNow  },
+                new Exchange() { BaseCode="GBP", PriceCode="BGN", Rate = 2.2905, MeasuredAt=DateTime.UtcNow  },
 
-                new Exchange() { BaseCode="BGN", PriceCode="GBP", Rate=0.4366, MeasuredAt=DateTime.Now  },
-                new Exchange() { BaseCode="BGN", PriceCode="USD", Rate =0.5889, MeasuredAt=DateTime.Now  }
+                new Exchange() { BaseCode="BGN", PriceCode="GBP", Rate=0.4366, MeasuredAt=DateTime.UtcNow  },
+                new Exchange() { BaseCode="BGN", PriceCode="USD", Rate =0.5889, MeasuredAt=DateTime.UtcNow  }
             };
 
             Exception exc = await Record.ExceptionAsync(async () => await dbService.RefreshExchangeRates(testExchanges2));
@@ -234,13 +234,13 @@ namespace CurrencyExchangeApiTest.Unit
 
             Exchange[] testExchanges = new Exchange[6]
             {
-                new Exchange() { BaseCode="USD", PriceCode="GBP", Rate=0.7365, MeasuredAt =DateTime.Now },
+                new Exchange() { BaseCode="USD", PriceCode="GBP", Rate=0.7365, MeasuredAt =DateTime.UtcNow },
                 new Exchange() { BaseCode="USD", PriceCode="BGN", Rate = 1.6912, MeasuredAt =default },
 
-                new Exchange() { BaseCode="GBP", PriceCode="USD", Rate=1.3471, MeasuredAt =DateTime.Now },
+                new Exchange() { BaseCode="GBP", PriceCode="USD", Rate=1.3471, MeasuredAt =DateTime.UtcNow },
                 new Exchange() { BaseCode="GBP", PriceCode="BGN", Rate = 2.2905, MeasuredAt =default },
 
-                new Exchange() { BaseCode="BGN", PriceCode="GBP", Rate=0.4366, MeasuredAt =DateTime.Now },
+                new Exchange() { BaseCode="BGN", PriceCode="GBP", Rate=0.4366, MeasuredAt =DateTime.UtcNow },
                 new Exchange() { BaseCode="BGN", PriceCode="USD", Rate =0.5889, MeasuredAt =default }
             };
 
