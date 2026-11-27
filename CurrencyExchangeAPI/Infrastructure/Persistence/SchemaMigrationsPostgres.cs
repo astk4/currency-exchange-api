@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using System.Text;
 
 namespace CurrencyExchangeAPI.Infrastructure.Persistence
 {
@@ -43,9 +44,21 @@ namespace CurrencyExchangeAPI.Infrastructure.Persistence
             string dir = Environment.CurrentDirectory;
             string readCommands = File.ReadAllText(sqlFileName);
 
+            NpgsqlConnectionStringBuilder connStrBuilder = new NpgsqlConnectionStringBuilder(options.Value.ConnectionString);
+
             using (NpgsqlConnection conn = new NpgsqlConnection(options.Value.ConnectionString))
             {
                 conn.Open();
+
+                if (!string.IsNullOrEmpty(connStrBuilder.SearchPath) && connStrBuilder.SearchPath != "public")
+                {
+                    StringBuilder schemaCmdSb = new StringBuilder($"create schema if not exists {connStrBuilder.SearchPath}; ")
+                        .Append($"grant create, usage on schema {connStrBuilder.SearchPath} to {connStrBuilder.Username};");
+
+                    conn.Execute(schemaCmdSb.ToString());
+
+                    conn.Execute($"set search_path to {connStrBuilder.SearchPath};");
+                }
 
                 conn.Execute(readCommands);
 
